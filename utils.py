@@ -84,8 +84,8 @@ def generate_password(length: int = 16) -> str:
 
 
 def generate_random_name(length: int = 10) -> str:
-    """Random uppercase alphanumeric identifier (no digits, safe as usernames)."""
-    return "".join(random.sample(string.ascii_uppercase, length))
+    """Random lowercase alphabetical identifier (no digits, safe as usernames)."""
+    return "".join(random.sample(string.ascii_lowercase, length))
 
 # ==============================================================================
 # REGEX EXTRACTION (copy the extract_* helpers into your main script)

