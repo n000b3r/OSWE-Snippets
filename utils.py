@@ -62,6 +62,15 @@ def encode_url(text: str) -> str:
     return urllib.parse.quote(text, safe='')
 
 # ==============================================================================
+# DECODERS (copy decode_base64 into your main script)
+# ==============================================================================
+
+def decode_base64(b64_text: str) -> str:
+    """CyberChef: From Base64"""
+    # Decoding the base64 string back into a standard utf-8 string
+    return base64.b64decode(b64_text).decode('utf-8')
+
+# ==============================================================================
 # RANDOM GENERATORS (copy generate_password / generate_random_name into your main script)
 # ==============================================================================
 
@@ -91,13 +100,19 @@ def generate_random_name(length: int = 10) -> str:
 # REGEX EXTRACTION (copy the extract_* helpers into your main script)
 # ==============================================================================
 
-def extract_between_markers(content, start_marker, end_marker):
+def extract_between_markers(content, start_marker, end_marker=None):
     """
-    Safely extracts text between markers by ensuring content is a string.
+    Extracts text between a start_marker and an end_marker, 
+    or until the end of the string if end_marker is None.
     """
     text_content = content.decode('utf-8', errors='ignore') if isinstance(content, bytes) else str(content)
     
-    pattern = re.escape(start_marker) + r"(.*?)" + re.escape(end_marker)
+    # If no end marker, stop at the end of the string ($)
+    if end_marker is None or end_marker == "":
+        pattern = re.escape(start_marker) + r"(.*)$"
+    else:
+        pattern = re.escape(start_marker) + r"(.*?)" + re.escape(end_marker)
+        
     match = re.search(pattern, text_content, re.DOTALL)
     
     if match:
