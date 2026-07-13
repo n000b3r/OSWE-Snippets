@@ -3,14 +3,13 @@
 Common utilities shared across all OSWE exploit scripts.
 Copy the helpers you need into your exploit script.
 """
+import requests
 
 import random
 import re
 import string
 import base64
 import urllib.parse
-
-import requests
 
 # ==============================================================================
 # SESSION

@@ -142,10 +142,6 @@ class CallbackHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
 
-# ==============================================================================
-# START SERVER
-# ==============================================================================
-
 def start_server(host: str = "0.0.0.0", port: int = 80) -> HTTPServer:
     """
     Start the callback/file server in a background daemon thread.
