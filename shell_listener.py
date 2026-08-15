@@ -19,6 +19,7 @@ import sys
 
 import socket
 import threading
+import time
 
 # ==============================================================================
 # CONSOLE HELPERS (inline so this module is self-contained)

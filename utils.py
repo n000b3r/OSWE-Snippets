@@ -10,6 +10,7 @@ import re
 import string
 import base64
 import urllib.parse
+import subprocess
 
 # ==============================================================================
 # SESSION
@@ -60,6 +61,10 @@ def encode_url(text: str) -> str:
     """CyberChef: URL Encode (Encode all special chars checked)"""
     return urllib.parse.quote(text, safe='')
 
+def string_to_decimal(s):
+    """CyberChef: To decimal"""
+    return ",".join(str(ord(c)) for c in s)
+
 # ==============================================================================
 # DECODERS (copy decode_base64 into your main script)
 # ==============================================================================
@@ -94,6 +99,34 @@ def generate_password(length: int = 16) -> str:
 def generate_random_name(length: int = 10) -> str:
     """Random lowercase alphabetical identifier (no digits, safe as usernames)."""
     return "".join(random.sample(string.ascii_lowercase, length))
+
+
+def create_token_gen_php_file():
+    php_content = r'''<?php
+function generateToken($seed) {
+    srand($seed);
+    $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_';
+    $ret = '';
+    for ($i = 0; $i < 32; $i++) {
+        $ret .= $chars[rand(0,strlen($chars)-1)];
+    }
+    return $ret;
+}
+
+$ts = $argv[1];
+print(generateToken($ts)."\n");
+?>
+'''
+    with open("token_gen.php", "w") as f:
+        f.write(php_content)
+
+def generate_php_token(seed):
+    result = subprocess.run(
+        ["php", "token_gen.php", str(seed)],
+        capture_output=True,
+        text=True
+    )
+    return result.stdout.strip()
 
 # ==============================================================================
 # REGEX EXTRACTION (copy the extract_* helpers into your main script)
