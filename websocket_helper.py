@@ -15,9 +15,10 @@ FOR HTTPS SITE:
     ws.close()
 
 FOR HTTP SITE:
-    ws = websocket.create_connection(f"ws://192.168.222.243:8000/send-message?token={token}&group_id=13", header=[f"Cookie: token={token}; username={username}; group=13; group_name=Public Discussion"])
+    rhost = urlparse(base_url).netloc
+    ws = websocket.create_connection(f"ws://{rhost}/send-message?token={token}&group_id=13", header=[f"Cookie: token={token}; username={username}; group=13; group_name=Public Discussion"])
     ws.settimeout(RECV_TIMEOUT)
-    ws.send("hello from script!")
+    ws.send("hi there, from script")
     output = ws_recv_all(ws)
     print(output)
     ws.close()

