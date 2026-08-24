@@ -74,6 +74,11 @@ def decode_base64(b64_text: str) -> str:
     # Decoding the base64 string back into a standard utf-8 string
     return base64.b64decode(b64_text).decode('utf-8')
 
+def decode_base64_to_hex(b64_text: str) -> str:
+    """Decode Base64 to raw bytes, then convert to hex string (like CyberChef's 'To Hex', Delimiter is None)."""
+    raw_bytes = base64.b64decode(b64_text)
+    return raw_bytes.hex()
+
 # ==============================================================================
 # RANDOM GENERATORS (copy generate_password / generate_random_name into your main script)
 # ==============================================================================
