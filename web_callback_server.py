@@ -82,7 +82,7 @@ class CallbackHandler(BaseHTTPRequestHandler):
         # ── 1. Capture exfil data from GET query parameters ───────────────────
         if query_string:
             params = {
-                k: v[0]
+                k: v[0].replace(" ", "+")
                 for k, v in parse_qs(query_string).items()
             }
             EXFIL_DATA[path] = params
