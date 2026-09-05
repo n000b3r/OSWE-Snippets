@@ -48,7 +48,7 @@ def get_columns_for_table(table_name):
         found = False
         for i in range(1, 40):
             char_found = False
-            for char in "abcdefghijklmnopqrstuvwxyz0123456789_":
+            for char in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_@-:":
                 if is_correct_char(i, char, base_query, row_offset):
                     col_name += char
                     char_found = True

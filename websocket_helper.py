@@ -22,6 +22,13 @@ FOR HTTP SITE:
     output = ws_recv_all(ws)
     print(output)
     ws.close()
+
+To pass it through BURP:
+    ws = websocket.create_connection(
+        f"ws://{rhost}/socket.io/?EIO=3&transport=websocket&sid={sid}",
+        http_proxy_host="127.0.0.1",
+        http_proxy_port=8080
+    )
 """
 
 import json
@@ -63,22 +70,25 @@ def ws_recv_all(ws, payload_key: str = "payload", filter_key: str = None, filter
     while True:
         try:
             raw_msg = ws.recv()
-            
+
             # Try to parse as JSON
             try:
                 msg = json.loads(raw_msg)
-                if filter_key and msg.get(filter_key) != filter_val:
-                    continue
-                text = _strip_ansi(msg.get(payload_key, ""))
-                
-            # If it's not JSON, just treat the raw message as the output
-            except json.decoder.JSONDecodeError:
+                # Handle non-dict JSON (e.g., integers, strings, lists)
+                if isinstance(msg, dict):
+                    if filter_key and msg.get(filter_key) != filter_val:
+                        continue
+                    text = _strip_ansi(msg.get(payload_key, ""))
+                else:
+                    text = _strip_ansi(str(msg))  # Convert int/str/list to string
+            # If not JSON, use raw message
+            except (json.decoder.JSONDecodeError, TypeError):
                 text = _strip_ansi(raw_msg)
 
             if text:
                 lines.append(text)
-                
+
         except websocket.WebSocketTimeoutException:
             break
-            
+
     return "\n".join(lines)

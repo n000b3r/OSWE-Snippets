@@ -65,6 +65,16 @@ def string_to_decimal(s):
     """CyberChef: To decimal"""
     return ",".join(str(ord(c)) for c in s)
 
+def to_charcodes(s, delimiter=",", base=10):
+    """Convert a string to charcodes (decimal or hex)."""
+    codes = [ord(c) for c in s]
+    if base == 10:
+        return delimiter.join(str(c) for c in codes)
+    elif base == 16:
+        return delimiter.join(f"{c:x}" for c in codes)
+    else:
+        raise ValueError("Base must be 10 (decimal) or 16 (hex)")
+
 # ==============================================================================
 # DECODERS (copy decode_base64 into your main script)
 # ==============================================================================
