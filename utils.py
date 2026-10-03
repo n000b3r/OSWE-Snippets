@@ -76,6 +76,9 @@ def to_charcodes(s, delimiter=",", base=10):
     else:
         raise ValueError("Base must be 10 (decimal) or 16 (hex)")
 
+def to_md5(s: str) -> str:
+    return hashlib.md5(s.encode("utf-8")).hexdigest()
+
 # ==============================================================================
 # DECODERS (copy decode_base64 into your main script)
 # ==============================================================================
