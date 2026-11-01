@@ -5,6 +5,9 @@ WebSocket helper for targets that expose a command interface over WSS/WS.
 Requires: pip install websocket-client
 
 Usage (copy ws_recv_all into your exploit script):
+    Always remember to change the payload_key depending on server response:
+        output = ws_recv_all(ws, payload_key="message")
+    Can use ws.recv() for single frame response too!
 
 FOR HTTPS SITE:
     ws = websocket.create_connection("wss://target/ws_endpoint", sslopt={"cert_reqs": ssl.CERT_NONE})
@@ -47,7 +50,7 @@ _ANSI = re.compile(r'\x1b\[[0-9;]*m')
 def _strip_ansi(text: str) -> str:
     return _ANSI.sub('', text).strip()
 
-def ws_recv_all(ws, payload_key: str = "payload", filter_key: str = None, filter_val: str = None,) -> str:
+def ws_recv_all(ws, payload_key: str = None, filter_key: str = None, filter_val: str = None):
     """
     Drain all response frames from a WebSocket connection for a single command.
 
@@ -57,11 +60,13 @@ def ws_recv_all(ws, payload_key: str = "payload", filter_key: str = None, filter
     Args:
         ws          : Open websocket-client connection with a timeout set.
         payload_key : Key in the JSON frame that holds the output text.
+                      If None, the full parsed JSON frames are returned instead.
         filter_key  : Optional key to filter on (e.g. "type").
         filter_val  : Skip frames where filter_key != filter_val (e.g. heartbeats).
 
     Returns:
-        All output lines joined by newline.
+        payload_key=None  -> list of full frames (dicts, or parsed non-dict values)
+        otherwise         -> all output lines joined by newline.
 
     Example (app sends {"type": "response", "payload": "..."}):
         output = ws_recv_all(ws, payload_key="payload", filter_key="type", filter_val="response")
@@ -78,6 +83,9 @@ def ws_recv_all(ws, payload_key: str = "payload", filter_key: str = None, filter
                 if isinstance(msg, dict):
                     if filter_key and msg.get(filter_key) != filter_val:
                         continue
+                    if payload_key is None:
+                        lines.append(msg)      # keep the whole frame
+                        continue
                     text = _strip_ansi(msg.get(payload_key, ""))
                 else:
                     text = _strip_ansi(str(msg))  # Convert int/str/list to string
@@ -90,5 +98,8 @@ def ws_recv_all(ws, payload_key: str = "payload", filter_key: str = None, filter
 
         except websocket.WebSocketTimeoutException:
             break
+
+    if payload_key is None:
+        return lines          # list of full frames
 
     return "\n".join(lines)
